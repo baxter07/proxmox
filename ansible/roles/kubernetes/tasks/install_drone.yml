@@ -1,0 +1,83 @@
+---
+
+- name: Create namespace drone-ci
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: drone-ci
+
+- name: Get base64 encoded kubeconfig
+  shell: kubectl config view --raw | base64
+  register: kubeconfig_base64
+
+- name: Get service account token
+  shell: kubectl get secret {{ ansible_user }} -n default -o jsonpath={".data.token"}
+  register: service_account_token_base64
+
+- name: Create kubeconfig secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: kubeconfig
+        namespace: drone-ci
+      type: Opaque
+      data:
+        API_SERVER: "{{ kubernetes_api_server | b64encode }}"
+        API_TOKEN: "{{ service_account_token_base64.stdout }}"
+        KUBECONFIG: "{{ kubeconfig_base64.stdout }}"
+
+- name: Create drone ci secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: drone-ci
+        namespace: drone-ci
+      type: Opaque
+      data:
+        DRONE_RPC_SECRET: "{{ drone_rpc_secret | b64encode }}"
+        DRONE_GITLAB_CLIENT_ID: "{{ drone_gitlab_client_id | b64encode }}"
+        DRONE_GITLAB_CLIENT_SECRET: "{{ drone_gitlab_client_secret | b64encode }}"
+
+- name: Create registry auth secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: registry-auth
+        namespace: drone-ci
+      type: Opaque
+      data:
+        USERNAME: "{{ registry_username | b64encode }}"
+        TOKEN: "{{ registry_token | b64encode }}"
+
+- name: Install drone server
+  kubernetes.core.helm:
+    name: drone
+    chart_ref: drone/drone
+    namespace: drone-ci
+    values: "{{ lookup('template', 'templates/drone_server_values.yml') | from_yaml }}"
+
+- name: Install drone docker runner
+  kubernetes.core.helm:
+    name: drone-runner-docker
+    chart_ref: drone/drone-runner-docker
+    namespace: drone-ci
+    values: "{{ lookup('template', 'templates/drone_runner_values.yml') | from_yaml }}"
+
+- name: Install drone secret plugin
+  kubernetes.core.helm:
+    name: drone-kubernetes-secrets
+    chart_ref: drone/drone-kubernetes-secrets
+    namespace: drone-ci
+    values: "{{ lookup('template', 'templates/drone_plugin_values.yml') | from_yaml }}"

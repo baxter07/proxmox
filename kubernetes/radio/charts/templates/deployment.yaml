@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: icecast-app
+  labels:
+{{- include "radio-app.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: icecast
+{{- include "radio-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: icecast
+{{- include "radio-app.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: icecast2
+        image: pltnk/icecast2
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: icecast-conf
+          mountPath: /etc/icecast2/icecast.xml
+          subPath: icecast.xml
+          readOnly: true
+      volumes:
+      - name: icecast-conf
+        configMap:
+          name: icecast-conf
+          items:
+          - key: icecast.xml
+            path: icecast.xml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ezstream-app
+  labels:
+{{- include "radio-app.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ezstream
+{{- include "radio-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: ezstream
+{{- include "radio-app.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: ezstream
+        image: registry.nyckelpiga.io/ezstream:latest
+        volumeMounts:
+        - name: ezstream-volume
+          subPath: ezstream
+          mountPath: /ezstream
+        - name: ezstream-volume
+          subPath: music
+          mountPath: /music
+      imagePullSecrets:
+        - name: registry-credentials
+      volumes:
+      - name: ezstream-volume
+        persistentVolumeClaim:
+          claimName: {{ include "radio-app.fullname" . }}

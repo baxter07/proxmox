@@ -1,0 +1,37 @@
+source /etc/network/interfaces.d/*
+
+auto lo
+iface lo inet loopback
+
+auto enp4s0
+iface enp4s0 inet static
+        address <ip>
+        netmask 255.255.255.255
+        pointopoint 136.243.131.65
+        gateway <ip>
+
+auto vmbr0
+iface vmbr0 inet static
+        address <ip>
+        netmask 255.255.255.255
+        bridge_ports none
+        bridge_stp off
+        bridge_fd 0
+        up ip route add <ip>/32 dev vmbr0
+
+auto vmbr1
+iface vmbr1 inet static
+        address <ip>
+        netmask 255.255.255.255
+        bridge_ports none
+        bridge_stp off
+        bridge_fd 0
+        up ip route add 1<ip>/32 dev vmbr1
+
+auto vmbr2
+iface vmbr2 inet static
+        address  <ip>
+        netmask  255.255.255.0
+        bridge_ports none
+        bridge_stp off
+        bridge_fd 0

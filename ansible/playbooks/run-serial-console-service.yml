@@ -1,0 +1,16 @@
+- hosts: pve
+  tasks:
+    - name: create serial console service file
+      copy:
+        src: ../templates/ttyS0.service
+        dest: /lib/systemd/system/ttyS0.service
+
+    - name: reload systemctl daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: restart ttyS0 service
+      systemd:
+        name: ttyS0.service
+        state: restarted
+        enabled: yes

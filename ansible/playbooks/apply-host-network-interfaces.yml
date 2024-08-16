@@ -1,0 +1,17 @@
+- hosts: pve
+
+  vars_prompt:
+    - name: confirm_action
+      prompt: "CAUTION: This will require all VM's to be restarted! Continue (yes/no)?"
+      private: no
+
+  tasks:
+    - name: Copy network interfaces
+      when: confirm_action | bool
+      copy:
+        src: ../templates/network-interfaces
+        dest: /etc/network/interfaces
+
+    - name: Restart networking service
+      when: confirm_action | bool
+      ansible.builtin.shell: systemctl restart networking

@@ -1,0 +1,19 @@
+---
+
+- name: Initialize kubernetes master node
+  include_tasks: init_node.yml
+
+- name: Install packages and add helm repositories
+  include_tasks: init_helm.yml
+
+- name: Install core cluster helm charts
+  include_tasks: install_charts.yml
+
+- name: Install drone ci
+  include_tasks: install_drone.yml
+
+- name: Install prometheus/grafana monitoring charts
+  include_tasks: install_monitoring.yml
+
+- name: Install linkerd service mesh
+  include_tasks: install_linkerd.yml

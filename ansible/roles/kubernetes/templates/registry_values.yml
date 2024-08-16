@@ -1,0 +1,14 @@
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 10g
+  hosts:
+    - <domain>
+
+persistence:
+  enabled: true
+  storageClass: nfs-client
+  size: 20Gi
+
+secrets:
+  htpasswd: {{ registry_auth }}

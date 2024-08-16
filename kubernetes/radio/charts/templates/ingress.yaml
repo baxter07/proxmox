@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "radio-app.fullname" . }}
+  labels:
+{{- include "radio-app.labels" . | nindent 4 }}
+  annotations:
+    cert-manager.io/cluster-issuer: self-signed-issuer
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: radio.chirpse.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: icecast-service
+            port:
+              number: 8000
+  tls:
+  - hosts:
+    - radio.chirpse.com
+    secretName: self-signed-cert

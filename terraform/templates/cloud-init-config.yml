@@ -1,0 +1,26 @@
+#cloud-config
+
+package_update: ${auto_update}
+package_upgrade: ${auto_update}
+
+packages: ${jsonencode(concat(packages, ["ripgrep"]))}
+
+manage_etc_hosts: false
+hostname: ${hostname}
+
+users:
+  %{ for username, ssh_pub_key in ci_users }
+  - name: ${username}
+    sudo: ALL=(ALL) ALL:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ssh_pub_key}
+  %{ endfor }
+
+%{ if init_script_content != "" }
+write_files:
+  - path: /var/lib/cloud/scripts/per-once/boot_init.sh
+    content: ${base64encode(init_script_content)}
+    permissions: '0755'
+    encoding: base64
+%{ endif }

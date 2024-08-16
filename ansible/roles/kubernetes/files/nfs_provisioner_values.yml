@@ -1,0 +1,6 @@
+nfs:
+  server: nfs.local.lan
+  path: /export/k8s
+
+#storageClass:
+#  reclaimPolicy: Retain

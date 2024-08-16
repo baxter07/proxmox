@@ -1,0 +1,81 @@
+
+- name: Download linkerd install script
+  become: yes
+  get_url:
+    url: https://run.linkerd.io/install-edge
+    dest: /tmp/install-linkerd.sh
+    mode: '0755'
+
+- name: Execute linkerd install script
+  command: /bin/sh /tmp/install-linkerd.sh
+
+- name: Delete linkerd install script
+  become: yes
+  ansible.builtin.file:
+    state: absent
+    path: /tmp/install-linkerd.sh
+
+- name: Add linkerd binary to PATH
+  blockinfile:
+    path: /home/{{ ansible_user }}/.profile
+    block: |
+      if [ -d "$HOME/.linkerd2/bin" ] ; then
+          PATH=$PATH:$HOME/.linkerd2/bin
+      fi
+
+- name: Download step-cli package
+  become: yes
+  get_url:
+    url: https://dl.smallstep.com/cli/docs-cli-install/latest/step-cli_amd64.deb
+    dest: /tmp/step-cli_amd64.deb
+
+- name: Install step-cli package
+  become: yes
+  apt:
+    deb: /tmp/step-cli_amd64.deb
+
+- name: Delete step-cli package
+  become: yes
+  ansible.builtin.file:
+    state: absent
+    path: /tmp/step-cli_amd64.deb
+
+- name: Generate mTLS root certificate valid for 10 years
+  ansible.builtin.shell: |
+    step certificate create root.linkerd.cluster.local \
+      $HOME/.linkerd2/ca.crt $HOME/.linkerd2/ca.key \
+      --profile root-ca --no-password --insecure --not-after=87600h
+
+- name: Generate intermediate certificate that will be used to sign the Linkerd proxies CSR
+  ansible.builtin.shell: |
+    step certificate create identity.linkerd.cluster.local \
+      $HOME/.linkerd2/issuer.crt $HOME/.linkerd2/issuer.key \
+      --profile intermediate-ca --not-after 87600h --no-password --insecure \
+      --ca $HOME/.linkerd2/ca.crt --ca-key $HOME/.linkerd2/ca.key
+
+- name: Install linkerd crds
+  kubernetes.core.helm:
+    name: linkerd-crds
+    chart_ref: linkerd/linkerd-crds
+    namespace: linkerd
+    create_namespace: yes
+
+- name: Install linkerd control plane
+  kubernetes.core.helm:
+    name: linkerd-control-plane
+    chart_ref: linkerd/linkerd-control-plane
+    namespace: linkerd
+    set_values:
+      - value: "identityTrustAnchorsPEM=/home/{{ ansible_user }}/.linkerd2/ca.crt"
+        value_type: file
+      - value: "identity.issuer.tls.crtPEM=/home/{{ ansible_user }}/.linkerd2/issuer.crt"
+        value_type: file
+      - value: "identity.issuer.tls.keyPEM=/home/{{ ansible_user }}/.linkerd2/issuer.key"
+        value_type: file
+
+- name: Install linkerd viz
+  kubernetes.core.helm:
+    name: linkerd-viz
+    chart_ref: linkerd/linkerd-viz
+    namespace: linkerd-viz
+    create_namespace: yes

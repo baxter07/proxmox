@@ -1,0 +1,9 @@
+pve:
+  user: <user>@pve
+
+rbac:
+  create: true
+  pspEnabled: false
+
+serviceAccount:
+  create: true

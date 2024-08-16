@@ -1,0 +1,46 @@
+- hosts: postgres
+  become: yes
+
+  vars_prompt:
+    - name: db_name
+      prompt: "Database name"
+      private: no
+
+  tasks:
+    - name: Create database
+      community.postgresql.postgresql_db:
+        state: present
+        name: "{{ db_name }}"
+      become_user: postgres
+
+    - name: Create db role
+      community.postgresql.postgresql_user:
+        state: present
+        name: "{{ db_name }}"
+        password: "{{ db_credentials[db_name] }}"
+      environment:
+        PGOPTIONS: "-c password_encryption=scram-sha-256"
+      become_user: postgres
+
+    - name: GRANT ALL PRIVILEGES ON DATABASE db_name TO db_user
+      community.postgresql.postgresql_privs:
+        db: "{{ db_name }}"
+        privs: ALL
+        type: database
+        role: "{{ db_name }}"
+      become_user: postgres
+
+    - name: Update pg_hba config
+      community.postgresql.postgresql_pg_hba:
+        dest: /etc/postgresql/12/main/pg_hba.conf
+        contype: host
+        databases: "{{ db_name }}"
+        users: "{{ db_name }}"
+        address: samenet
+        method: scram-sha-256
+      become_user: postgres
+      notify: restart postgres
+
+  handlers:
+    - name: restart postgres
+      service: name=postgresql state=restarted

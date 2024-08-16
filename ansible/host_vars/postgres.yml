@@ -1,0 +1,4 @@
+
+db_credentials:
+  grafana: "{{ grafana_db_password }}"
+  zulip: "{{ zulip_db_password }}"

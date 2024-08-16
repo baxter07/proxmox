@@ -1,0 +1,8 @@
+server_ip: <ip>
+pod_network_cidr: <ip>/16
+
+registry_username: admin
+drone_username: admin
+drone_server: https://<url>
+drone_secret_plugin_endpoint: http://drone-kubernetes-secrets:3000
+kubernetes_api_server: https://kubernetes.local.lan:6443

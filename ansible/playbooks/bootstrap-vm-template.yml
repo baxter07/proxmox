@@ -1,0 +1,35 @@
+- hosts: pve
+
+  vars_prompt:
+    - name: vm_template
+      prompt: "VM template name"
+      private: no
+
+  vars:
+    - vm_id: "{{ vm_templates[vm_template].vm_id }}"
+    - vm_name: "{{ vm_templates[vm_template].vm_name }}"
+    - disk_size: "{{ vm_templates[vm_template].disk_size }}"
+
+  tasks:
+    - name: Checking if vm id ({{ vm_id }}) already exists
+      ansible.builtin.shell: qm status {{ vm_id }}
+      register: stdout
+      ignore_errors: yes
+
+    - fail:
+        msg: "VM ID exists already"
+      when: stdout.rc != 2
+
+    - name: Creating vm instance ({{ vm_name }})
+      ansible.builtin.shell: |
+        qm clone {{ vm_base_template_id }} {{ vm_id }} --name {{ vm_name }} --full 1
+
+    - name: Wait for vm instance
+      ansible.builtin.pause:
+        seconds: 20
+
+    - name: Resizing disk to {{ disk_size }}
+      ansible.builtin.shell: qm resize {{ vm_id }} scsi0 {{ disk_size }}
+
+    - name: Converting vm instance to template
+      ansible.builtin.shell: qm template {{ vm_id }}

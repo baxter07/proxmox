@@ -1,0 +1,6 @@
+rbac:
+  secretNamespace: drone-ci
+
+env:
+  SECRET_KEY: {{ drone_secret_plugin_token }}
+  KUBERNETES_NAMESPACE: drone-ci

@@ -1,0 +1,34 @@
+
+hub:
+  config:
+    Authenticator:
+      admin_users:
+        - username
+      allowed_users:
+        - username
+#    GitLabOAuthenticator:
+#      client_id: <client_id>
+#      client_secret: <client_secret>
+#      oauth_callback_url: https://<url>/hub/oauth_callback
+#      gitlab_url: https://<url>
+    JupyterHub:
+      authenticator_class: dummy
+  db:
+    pvc:
+      storage: 1Gi
+      storageClassName: nfs-client
+
+singleuser:
+  storage:
+    dynamic:
+      storageClass: nfs-client
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+  - <domain>
+  tls:
+  - hosts:
+      - <domain>
+    secretName: self-signed-cert

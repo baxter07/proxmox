@@ -1,0 +1,15 @@
+[proxmox]
+pve          ansible_host=<domain>  ansible_become=yes
+wireguard    ansible_host=wireguard.local.lan
+postgres     ansible_host=postgres.local.lan
+redis        ansible_host=redis.local.lan
+mail         ansible_host=mail.local.lan
+gitlab       ansible_host=gitlab.local.lan
+nextcloud    ansible_host=nextcloud.local.lan
+zulip        ansible_host=zulip.local.lan
+meet         ansible_host=meet.local.lan
+
+[kubernetes]
+kube-master  ansible_host=kube-master.local.lan
+kube-node1   ansible_host=kube-node1.local.lan
+kube-node2   ansible_host=kube-node2.local.lan

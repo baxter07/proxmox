@@ -1,0 +1,22 @@
+env:
+  DRONE_GITLAB_SERVER: https://<domain>
+  DRONE_SERVER_HOST: <host>
+  DRONE_SERVER_PROTO: https
+  DRONE_USER_CREATE: username:{{ ansible_user }},machine:false,admin:true,token:{{ drone_user_token }}
+
+extraSecretNamesForEnvFrom:
+  - drone-ci
+
+persistentVolume:
+  enabled: true
+  storageClass: nfs-client
+  size: 8Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: <domain>
+      paths:
+        - path: /
+          pathType: Prefix

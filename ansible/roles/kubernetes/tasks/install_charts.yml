@@ -1,0 +1,73 @@
+---
+
+- name: Install nginx ingress controller
+  kubernetes.core.helm:
+    name: ingress-nginx
+    chart_ref: ingress-nginx/ingress-nginx
+    namespace: ingress-nginx
+    create_namespace: yes
+    values: "{{ lookup('file', 'files/nginx_ingress_values.yml') | from_yaml }}"
+
+- name: Wait for nginx ingress
+  pause:
+    seconds: 30
+
+- name: Install cert-manager chart
+  kubernetes.core.helm:
+    name: cert-manager
+    chart_ref: jetstack/cert-manager
+    namespace: cert-manager
+    create_namespace: yes
+    values: "{{ lookup('file', 'files/cert_manager_values.yml') | from_yaml }}"
+
+- name: Create cluster issuers
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', 'files/cert_manager_issuer.yml') }}"
+
+- name: Install kubernetes dashboard
+  kubernetes.core.helm:
+    name: kubernetes-dashboard
+    chart_ref: kubernetes-dashboard/kubernetes-dashboard
+    namespace: kubernetes-dashboard
+    create_namespace: yes
+    values: "{{ lookup('file', 'files/dashboard_values.yml') | from_yaml }}"
+
+- name: Create admin service account
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', 'files/admin_service_account.yml') }}"
+
+- name: Create registry credentials secret
+  shell: |
+    kubectl delete -n default --ignore-not-found secret registry-credentials
+    kubectl create -n default secret docker-registry registry-credentials \
+      --docker-server=registry.nyckelpiga.io \
+      --docker-username={{ registry_username }} \
+      --docker-password={{ registry_token }} \
+      --docker-email=admin@nyckelpiga.io
+
+- name: Install docker registry
+  kubernetes.core.helm:
+    name: docker-registry
+    chart_ref: twuni/docker-registry
+    namespace: registry
+    create_namespace: yes
+    values: "{{ lookup('template', 'templates/registry_values.yml') | from_yaml }}"
+
+- name: Install nfs subdir external provisioner
+  kubernetes.core.helm:
+    name: nfs-subdir-external-provisioner
+    chart_ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
+    namespace: nfs-provisioner
+    create_namespace: yes
+    values: "{{ lookup('file', 'files/nfs_provisioner_values.yml') | from_yaml }}"
+
+- name: Install jupyter hub
+  kubernetes.core.helm:
+    name: jupyterhub
+    chart_ref: jupyterhub/jupyterhub
+    chart_version: 3.3.7
+    namespace: jupyterhub
+    create_namespace: yes
+    values: "{{ lookup('file', 'files/jupyter_values.yml') | from_yaml }}"

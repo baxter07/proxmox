@@ -1,0 +1,7 @@
+
+persistentVolume:
+  enabled: true
+  storageClass: nfs-client
+  size: 32Gi
+  accessModes:
+  - ReadWriteOnce

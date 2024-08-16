@@ -1,0 +1,32 @@
+
+hub:
+  config:
+    Authenticator:
+      admin_users:
+        - username
+      allowed_users:
+        - username
+    GitLabOAuthenticator:
+      gitlab_url: https://<url>
+      client_id: <client_id>
+      client_secret: <client_secret>
+      oauth_callback_url: https://<domain>/hub/oauth_callback
+  db:
+    pvc:
+      storage: 1Gi
+      storageClassName: nfs-client
+
+singleuser:
+  storage:
+    dynamic:
+      storageClass: nfs-client
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+  - <domain>
+  tls:
+  - hosts:
+      - <domain>
+    secretName: self-signed-cert

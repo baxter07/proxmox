@@ -1,0 +1,46 @@
+- hosts: pve
+
+  vars_prompt:
+    - name: vm_id
+      prompt: "VM ID"
+      default: 111
+      private: no
+    - name: vm_name
+      prompt: "VM name"
+      default: "ubuntu-noble-cloudinit"
+      private: no
+    - name: ci_img
+      prompt: "Cloud init image"
+      default: "noble-server-cloudimg-amd64.img"
+      private: no
+    - name: install_qemu
+      prompt: "Install qemu guest agent (yes/no)?"
+      private: no
+    - name: storage_pool
+      prompt: "Storage pool"
+      default: "local-vm"
+      private: no
+    - name: memory
+      prompt: "Memory"
+      default: 4096
+      private: no
+    - name: cores
+      prompt: "Cores"
+      default: 2
+      private: no
+
+  tasks:
+    - name: Install qemu guest agent on qcow2 image
+      ansible.builtin.shell: virt-customize -a {{ volume.iso_path }}/{{ ci_img }} --install qemu-guest-agent
+      when: install_qemu | bool
+
+    - name: Creating cloud init base image
+      ansible.builtin.shell: |
+        qm create {{ vm_id }} --name {{ vm_name }} --memory {{ memory }} --cores {{ cores }} --sockets 1
+        qm importdisk {{ vm_id }} {{ volume.iso_path }}/{{ ci_img }} {{ storage_pool }} --format qcow2
+        qm set {{ vm_id }} --scsihw virtio-scsi-pci --scsi0 {{ storage_pool }}:{{ vm_id }}/vm-{{ vm_id }}-disk-0.qcow2
+        qm set {{ vm_id }} --ide2 {{ storage_pool }}:cloudinit
+        qm set {{ vm_id }} --boot c --bootdisk scsi0
+        qm set {{ vm_id }} --serial0 socket --vga serial0
+        qm set {{ vm_id }} --agent 1
+        qm template {{ vm_id }}

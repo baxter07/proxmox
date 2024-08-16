@@ -1,0 +1,19 @@
+- hosts: kubernetes
+  roles:
+    - ../roles/bash
+
+- hosts: kube-master
+  roles:
+    - ../roles/kubernetes
+
+- hosts: kube-node1 kube-node2
+  tasks:
+    - name: Install nfs-common for k8s nfs external provisioner
+      become: yes
+      apt:
+        name: nfs-common
+        state: present
+
+# Initialise kubernetes cluster on master node and join worker nodes before running ansible tasks:
+# sudo kubeadm config images pull
+# sudo kubeadm init --pod-network-cidr=<ip>/16

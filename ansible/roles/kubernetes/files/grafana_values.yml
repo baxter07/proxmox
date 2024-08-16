@@ -1,0 +1,35 @@
+
+admin:
+  existingSecret: grafana-admin-auth
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: self-signed-issuer
+  hosts:
+    - <domain>
+  tls:
+    - secretName: self-signed-cert
+      hosts:
+        - <domain>
+
+grafana.ini:
+  auth:
+    disable_login_form: false
+  auth.anonymous:
+    enabled: false
+  server:
+    root_url: https://<domain>
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server
+      access: proxy
+      isDefault: true
+    deleteDatasources:
+    - name: Prometheus

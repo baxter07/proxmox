@@ -1,0 +1,17 @@
+
+app:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - <domain>
+      - kubernetes.local.lan
+
+metrics-server:
+  enabled: true
+
+cert-manager:
+  enabled: false
+
+nginx:
+  enabled: false

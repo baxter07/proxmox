@@ -1,0 +1,10 @@
+serviceMonitor:
+  enabled: true
+
+config:
+  datasource:
+    host: postgres.local.lan
+    database: chirpse
+    passwordSecret:
+      key: postgres-password
+      name: postgres-secret

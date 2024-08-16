@@ -1,0 +1,26 @@
+
+services:
+  icecast:
+    image: pltnk/icecast2
+    container_name: icecast2
+    ports:
+      - 8000:8000
+    volumes:
+      - ./icecast.xml:/etc/icecast2/icecast.xml
+    networks:
+      - net
+  ezstream:
+    build:
+      context: ./ezstream
+    image: registry.nyckelpiga.io/ezstream
+    container_name: ezstream
+    volumes:
+      - ./ezstream:/ezstream
+      - ./music:/music
+    networks:
+      - net
+    depends_on:
+      - icecast
+
+networks:
+  net:

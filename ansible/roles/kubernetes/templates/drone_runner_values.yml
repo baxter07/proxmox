@@ -1,0 +1,23 @@
+env:
+  DRONE_RPC_HOST: <host>
+  DRONE_RPC_PROTO: https
+  DRONE_SECRET_PLUGIN_ENDPOINT: {{ drone_secret_plugin_endpoint }}
+  DRONE_SECRET_PLUGIN_TOKEN: {{ drone_secret_plugin_token }}
+  DRONE_UI_USERNAME: admin
+  DRONE_UI_PASSWORD: {{ drone_user_token }}
+
+extraSecretNamesForEnvFrom:
+  - drone-ci
+
+dind:
+  commandArgs:
+    - "--host"
+    - "tcp://localhost:2375"
+  extraVolumeMounts:
+    - name: docker-socket
+      mountPath: /var/run/docker.sock
+
+extraVolumes:
+  - name: docker-socket
+    hostPath:
+      path: /var/run/docker.sock

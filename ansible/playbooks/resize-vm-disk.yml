@@ -1,0 +1,20 @@
+- hosts: pve
+
+  vars_prompt:
+    - name: vm_id
+      prompt: "VM ID"
+      private: no
+    - name: disk_size
+      prompt: "Resize disk"
+      default: "+10G"
+      private: no
+
+  tasks:
+    - name: Shutdown vm {{ vm_id }}
+      ansible.builtin.shell: qm shutdown {{ vm_id }}
+
+    - name: Resizing disk to {{ disk_size }}
+      ansible.builtin.shell: qm resize {{ vm_id }} scsi0 {{ disk_size }}
+
+    - name: Starting vm {{ vm_id }}
+      ansible.builtin.shell: qm start {{ vm_id }}

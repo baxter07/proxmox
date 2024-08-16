@@ -1,0 +1,9 @@
+[Unit]
+Description=Serial Console Service
+
+[Service]
+ExecStart=/sbin/getty -L 115200 ttyS0 vt102
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
